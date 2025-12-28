@@ -33,7 +33,7 @@ export const metadata = {
     title: "Vica's Nails",
     description: "Reservá tu turno online de forma rápida y sencilla",
     icons: {
-    icon: "/favicon.svg",
+    icon: "/favicon.ico",
   },
     images: [
       {

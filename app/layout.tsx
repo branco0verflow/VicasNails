@@ -37,7 +37,7 @@ export const metadata = {
   },
     images: [
       {
-        url: "/og-image.png",
+        url: "/og-imagee.png",
         width: 1200,
         height: 630,
         alt: "Vica's Nails",

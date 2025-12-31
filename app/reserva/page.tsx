@@ -300,6 +300,7 @@ function Modal({
         <div
           role="dialog"
           aria-modal="true"
+          aria-label="Modal"
           className={cn(
             // Base
             "w-full border border-white/10 bg-[#0b0b0f]/95 shadow-[0_30px_90px_rgba(0,0,0,0.65)] overflow-hidden",
@@ -701,24 +702,38 @@ export default function CrearReservaPage() {
                     </div>
                   </div>
 
-                  {/* Servicio */}
-                  <label className="grid gap-2">
-                    <span className="text-sm font-medium text-white/85">Seleccionar servicio</span>
-                    <select
-                      value={serviceId}
-                      onChange={(e) => setServiceId(e.target.value)}
-                      className={cn(
-                        "h-12 rounded-2xl border border-white/10 bg-black/30 px-4 text-white outline-none",
-                        "focus:border-white/25 focus:ring-2 focus:ring-white/10"
-                      )}
-                    >
-                      {SERVICES.map((s) => (
-                        <option key={s.id} value={s.id} className="bg-black">
-                          {s.name} — {formatUYU(s.price)} · {s.durationMin} min
-                        </option>
-                      ))}
-                    </select>
+
+                  {/*Servicios disponibles*/}
+                  <label className="grid gap-2 w-full min-w-0">
+                    <span className="text-sm font-medium text-white/85">
+                      Seleccionar servicio
+                    </span>
+
+                    <div className="relative w-full min-w-0">
+                      <select
+                        value={serviceId}
+                        onChange={(e) => setServiceId(e.target.value)}
+                        className={cn(
+                          "w-full min-w-0 max-w-full",
+                          "h-12 rounded-2xl border border-white/10 bg-black/30 px-4 pr-10",
+                          "text-white outline-none appearance-none",
+                          "focus:border-white/25 focus:ring-2 focus:ring-white/10"
+                        )}
+                      >
+                        {SERVICES.map((s) => (
+                          <option key={s.id} value={s.id} className="bg-black">
+                            {s.name} — {formatUYU(s.price)} · {s.durationMin} min
+                          </option>
+                        ))}
+                      </select>
+
+                      {/* Flecha custom (evita overflow visual) */}
+                      <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">
+                        ▾
+                      </span>
+                    </div>
                   </label>
+
 
                   {/* Imagen de referencia (opcional) */}
                   <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">

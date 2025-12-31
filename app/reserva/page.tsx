@@ -252,24 +252,34 @@ function StepPill({
 
 function Modal({
   open,
-  title,
   children,
   onClose,
+  className,
   primaryAction,
 }: {
   open: boolean;
-  title: string;
   children: React.ReactNode;
   onClose: () => void;
+  className?: string;
   primaryAction?: React.ReactNode;
 }) {
+  // ESC + bloquear scroll del body
   useEffect(() => {
     if (!open) return;
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
@@ -284,42 +294,53 @@ function Modal({
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
       />
 
-      {/* Dialog */}
-      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+      {/* Wrapper */}
+      <div className="absolute inset-0 flex items-stretch sm:items-center justify-center p-0 sm:p-6">
+        {/* Panel */}
         <div
-        aria-label="modal"
           role="dialog"
           aria-modal="true"
           className={cn(
-            "w-full max-w-2xl rounded-3xl border border-white/10 bg-[#0b0b0f]/95 shadow-[0_30px_90px_rgba(0,0,0,0.65)]",
-            "overflow-hidden"
+            // Base
+            "w-full border border-white/10 bg-[#0b0b0f]/95 shadow-[0_30px_90px_rgba(0,0,0,0.65)] overflow-hidden",
+            // Mobile fullscreen
+            "h-[100dvh] rounded-none",
+            // Desktop compacto
+            "sm:h-auto sm:max-h-[85dvh] sm:max-w-2xl sm:rounded-3xl",
+            // Layout
+            "flex flex-col",
+            className
           )}
         >
-          <div className="p-5 sm:p-6 border-b border-white/10">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="text-xl sm:text-2xl font-semibold text-white">{title}</div>
-                <div className="mt-1 text-sm text-white/65">
-                  Confirmación y condiciones de abono.
-                </div>
+          {/* Header (minimal, ocupa poco) */}
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-white/10 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              {/* Si querés ocultar esto en mobile, cambiá a: "hidden sm:block" */}
+              <div className="text-sm text-white/85 font-semibold truncate">
+                Confirmación
               </div>
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="h-10 w-10 rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] transition grid place-items-center"
-                aria-label="Cerrar modal"
-              >
-                <span className="text-white/80">✕</span>
-              </button>
+              <div className="text-xs text-white/55 truncate">
+                Condiciones de abono
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-10 w-10 shrink-0 rounded-2xl border border-white/10 bg-white/[0.04] hover:bg-white/[0.07] transition grid place-items-center"
+              aria-label="Cerrar modal"
+            >
+              <span className="text-white/80">✕</span>
+            </button>
           </div>
 
-          <div className="p-5 sm:p-6 max-h-[70vh] overflow-auto">
+          {/* Body scrolleable (solo acá scrollea) */}
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 sm:px-6 py-4">
             {children}
           </div>
 
-          <div className="p-5 sm:p-6 border-t border-white/10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
+          {/* Footer fijo abajo */}
+          <div className="px-4 sm:px-6 py-4 border-t border-white/10 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-end">
             <button
               type="button"
               onClick={onClose}
@@ -471,6 +492,21 @@ export default function CrearReservaPage() {
     return `https://wa.me/${WHATSAPP_NUMBER_INTL}?text=${text}`;
   }, [whatsappMessage]);
 
+
+  useEffect(() => {
+    if (successOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [successOpen]);
+
+
+
   return (
     <main className="min-h-screen text-white">
       {/* Background premium con imagen */}
@@ -486,64 +522,80 @@ export default function CrearReservaPage() {
       {/* Modal éxito */}
       <Modal
         open={successOpen}
-        title="Reserva exitosa"
         onClose={() => setSuccessOpen(false)}
+        className="sm:max-w-lg" // opcional, ya tiene max-w-2xl por default
         primaryAction={
           <a
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(
-              "h-12 rounded-2xl font-semibold transition px-6 inline-flex items-center justify-center",
-              "bg-white text-black hover:bg-white/90"
-            )}
+            className="h-12 rounded-2xl font-semibold px-6 inline-flex items-center justify-center bg-white text-black hover:bg-white/90"
           >
             Abonar
           </a>
         }
       >
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-          <div className="text-sm sm:text-base text-white/85 font-semibold">
-            Reserva exitosa, si no abonas la reserva se perderá.
-          </div>
 
-          <div className="mt-4 space-y-3 text-sm text-white/70 leading-relaxed">
-            <p>
-              Para agendar debes abonar <span className="font-semibold text-white/90">{formatCLP(DEPOSIT_CLP)}</span> por servicio,
-              monto que será descontado del valor total. Mientras no realices el abono, la hora sigue estando disponible para ser tomada.
-            </p>
-
-            <p>
-              Solo habrá reembolso si cancelas tu cita con mínimo 24 horas de anticipación (independiente del motivo).
-            </p>
-
-            <p>
-              Solo podrás reagendar tu cita si avisas con mínimo 24 horas de anticipación, pasado ese plazo, pierdes tu abono y deberás realizar uno nuevo si necesitas otra cita.
-            </p>
-
-            <p className="font-semibold text-white/85">
-              Pierdes tu abono si no llegas a tu cita.
-            </p>
-          </div>
-
-          <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-              <div className="text-xs text-white/55">Servicio</div>
-              <div className="mt-1 text-sm text-white/90 font-semibold">{selectedService.name}</div>
+        <div className="flex h-full flex-col">
+          {/* Header mobile opcional */}
+          <div className="sm:hidden px-5 pt-4 text-center">
+            <div className="text-base font-semibold text-white">
+              Reserva exitosa
             </div>
+          </div>
 
-            <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-              <div className="text-xs text-white/55">Fecha y hora</div>
-              <div className="mt-1 text-sm text-white/90 font-semibold">
-                {date ? formatDateForMessage(date) : "—"} · {time ?? "—"}
+          {/* CONTENIDO SCROLLEABLE */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-5 pb-6 pt-4 overscroll-contain">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+              <div className="text-sm sm:text-base text-white/85 font-semibold">
+                Reserva exitosa, si no abonas la reserva se perderá.
+              </div>
+
+              <div className="mt-4 space-y-3 text-sm text-white/70 leading-relaxed">
+                <p>
+                  Para agendar debes abonar{" "}
+                  <span className="font-semibold text-white/90">
+                    {formatCLP(DEPOSIT_CLP)}
+                  </span>{" "}
+                  por servicio, monto que será descontado del valor total.
+                </p>
+
+                <p>
+                  Solo habrá reembolso si cancelas tu cita con mínimo 24 horas de anticipación.
+                </p>
+
+                <p>
+                  Pasadas 24 horas, pierdes tu abono y deberás realizar uno nuevo.
+                </p>
+
+                <p className="font-semibold text-white/85">
+                  Pierdes tu abono si no llegas a tu cita.
+                </p>
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs text-white/55">Servicio</div>
+                  <div className="mt-1 text-sm text-white/90 font-semibold">
+                    {selectedService.name}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                  <div className="text-xs text-white/55">Fecha y hora</div>
+                  <div className="mt-1 text-sm text-white/90 font-semibold">
+                    {date ? formatDateForMessage(date) : "—"} · {time ?? "—"}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 text-xs text-white/55">
+                El botón “Abonar” abrirá WhatsApp con el mensaje listo para enviar.
               </div>
             </div>
           </div>
-
-          <div className="mt-4 text-xs text-white/55">
-            El botón “Abonar” abrirá WhatsApp con el mensaje listo para enviar.
-          </div>
         </div>
+
       </Modal>
 
       {/* Ancla para scroll-to-top */}
